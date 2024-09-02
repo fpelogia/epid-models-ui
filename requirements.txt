@@ -39,6 +39,7 @@ parso==0.8.4
 pexpect==4.9.0
 pillow==10.4.0
 platformdirs==4.2.2
+prettytable==3.11.0
 prompt_toolkit==3.0.47
 protobuf==5.28.0
 psutil==6.0.0
@@ -46,6 +47,7 @@ ptyprocess==0.7.0
 pure_eval==0.2.3
 pyarrow==17.0.0
 pydeck==0.9.1
+pyecharts==2.0.6
 Pygments==2.18.0
 pyparsing==3.1.4
 python-dateutil==2.9.0.post0
@@ -56,10 +58,12 @@ requests==2.32.3
 rich==13.8.0
 rpds-py==0.20.0
 scipy==1.14.1
+simplejson==3.19.3
 six==1.16.0
 smmap==5.0.1
 stack-data==0.6.3
 streamlit==1.38.0
+streamlit-echarts==0.4.0
 tenacity==8.5.0
 toml==0.10.2
 tornado==6.4.1

@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_echarts import st_echarts
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,6 +27,19 @@ with col1:
 with col2:
     # Allow indicator selection
     indicator = st.selectbox('Pandemic Indicator', ['ICU Admissions'], disabled = True)
+
+
+st.session_state.disabled = False
+
+
+use_transition_points = st.radio(
+        "Transition Points",
+        ["Same as paper", "Calculated", "User defined"],
+        key="visibility",
+        label_visibility="visible",
+        disabled=st.session_state.disabled,
+        horizontal=True,
+    )
 
 with st.spinner('Please wait...'):
 
@@ -79,15 +93,22 @@ with st.spinner('Please wait...'):
     else:
         tp_threshold = 1e-6
 
-    col1, col2 = st.columns([1, 2])
+    # Transition Points
+    x_nw, fig, tran_pts_fig_series_data = get_transition_points(scaling_factor*acc_data, visual=True, threshold=tp_threshold, indicator = indicator, city_name=city_name)
 
-    with col1:    
-        # Transition Points
-        x_nw, fig = get_transition_points(scaling_factor*acc_data, visual=True, threshold=tp_threshold, indicator = indicator, city_name=city_name)
+    if use_transition_points == 'User defined':
+        # Allow user to adjust transition points
+        st.sidebar.title("Adjust Transition Points")
+        transition_points = [
+            st.sidebar.slider(f'Transition Point {i+1}', 0, len(tran_pts_fig_series_data['normalized_acc_n_cases']) - 1, value=x)
+            for i, x in enumerate(x_nw)
+        ]
+    else:
+        transition_points = x_nw
 
-        st.pyplot(fig)    
+    if use_transition_points == 'Same as paper':
+        # Use same transition points as in paper
 
-    with col2:
         if (city_name == 'Campania' or city_name == 'Sicilia'):
             x_nw = x_nw[1:7] # Campania e Sicilia
         else:
@@ -99,7 +120,6 @@ with st.spinner('Please wait...'):
             x_nw.append(len(acc_data) - 1)  
 
         # utilizando scaling_factor = max(acc_data)
-
         if (city_name == 'Lombardia'):
             # Manual (old)
             #x_nw = [189, 361, 532, 630, 865, 1144]
@@ -121,6 +141,137 @@ with st.spinner('Please wait...'):
             # Siscilia 5e-6 manual (213 -> 150) com th 5e-6 x_nw[1:7]
             x_nw = [150, 313, 389, 509, 651, 852]
 
+    elif use_transition_points == 'User defined':
+        # Use user defined transition points
+        x_nw = transition_points
+
+    else: # Calculated
+        pass # x_nw already contains the calculated points
+    
+    # Show transition points being used
+    text_input = st.text_input(
+        "Transition Points:",
+        disabled=True,
+        value=x_nw
+    )
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        tab1, tab2 = st.tabs(['Interactive Chart (Echarts)', 'Regular Chart (Matplotlib)'])
+
+        with tab2:
+            # regular matplotlib plot
+            st.pyplot(fig)   
+            
+        with tab1:
+
+            # plotting with streamlit echarts
+            options = {
+                "title": {
+                    "text": f"{city_name}",
+                    "left": "center",
+                    "top": 10,
+                    "textStyle": {"fontSize": 24}
+                },
+                "grid": [
+                    {"top": "15%", "left": "5%", "height": "25%", "width": "90%"},
+                    {"top": "45%", "left": "5%", "height": "25%", "width": "90%"},
+                    {"top": "75%", "left": "5%", "height": "20%", "width": "90%"}
+                ],
+                "xAxis": [
+                    {"gridIndex": 0, "type": "category", "data": list(range(len(tran_pts_fig_series_data['normalized_acc_n_cases'])))},
+                    {"gridIndex": 1, "type": "category", "data": list(range(len(tran_pts_fig_series_data['unf_daily_n_cases'])))},
+                    {"gridIndex": 2, "type": "category", "data": list(range(len(tran_pts_fig_series_data['sec_der'])))}
+                ],
+                "yAxis": [
+                    {"gridIndex": 0, "type": "value"},
+                    {"gridIndex": 1, "type": "value"},
+                    {"gridIndex": 2, "type": "value", "min": -2e-4, "max": 2e-4}
+                ],
+                "legend" : {
+                    "show": True,
+                    "position": "bottom",  
+                    "top": "5%",
+                    "left": "center",
+                    "width": "auto",
+                    "height": "auto",
+                    "data": ["Normalized accumulated number of cases", "New wave transition", "First derivative", "Filtered first derivative", "Second derivative", "Threshold"],                    
+                },
+                "series": [
+                    {
+                        "name": "Normalized accumulated number of cases",
+                        "type": "line",
+                        "xAxisIndex": 0,
+                        "yAxisIndex": 0,
+                        "data": list(tran_pts_fig_series_data['normalized_acc_n_cases']),
+                        "markLine": {
+                            "data": [{"xAxis": x} for x in transition_points],
+                            "lineStyle": {"type": "dotted"},
+                            "symbol": "none",  # Ensure no arrow tips
+                            "draggable": True  # Make the lines draggable
+                        },
+                        "color": "#1f77b4" # default blue (plt)
+                    },
+                    {
+                        "name": "First derivative",
+                        "type": "line",
+                        "xAxisIndex": 1,
+                        "yAxisIndex": 1,
+                        "data": list(tran_pts_fig_series_data['unf_daily_n_cases']),
+                        "markLine": {
+                            "data": [{"xAxis": x} for x in transition_points],
+                            "lineStyle": {"type": "dotted"},
+                            "symbol": "none",
+                            "draggable": True
+                        },
+                        "color": "#9467bd"
+                    },
+                    {
+                        "name": "Filtered first derivative",
+                        "type": "line",
+                        "xAxisIndex": 1,
+                        "yAxisIndex": 1,
+                        "data": list(tran_pts_fig_series_data['daily_n_cases']),
+                        "markLine": {
+                            "data": [{"xAxis": x} for x in transition_points],
+                            "lineStyle": {"type": "dotted"},
+                            "symbol": "none",
+                            "draggable": True
+                        },
+                        "color": "#2ca02c" # default green (plt)
+                    },
+                    {
+                        "name": "Second derivative",
+                        "type": "line",
+                        "xAxisIndex": 2,
+                        "yAxisIndex": 2,
+                        "data": list(tran_pts_fig_series_data['sec_der']),
+                        "markLine": {
+                            "data": [{"xAxis": x} for x in transition_points],
+                            "lineStyle": {"type": "dotted"},
+                            "symbol": "none",
+                            "draggable": True
+                        },
+                        "color": "#ff7f0e" # default orange (plt)
+                    },
+                    {
+                        "name": "Threshold",
+                        "type": "line",
+                        "xAxisIndex": 2,
+                        "yAxisIndex": 2,
+                        "data": [-1*tran_pts_fig_series_data['abs_threshold']]*len(tran_pts_fig_series_data['sec_der']),
+                        "lineStyle": {"type": "dashed"},
+                        "color": "gray"
+                    },
+                    # Additional series definitions remain the same
+                ]
+            }
+
+            st_echarts(options=options, height=700, width=500)
+
+    # Right Column - Optimization results - model fit and predictions
+    with col2:
 
         sig_params, rel_rmse_list, rel_rmse_list_pred, y_m, fig_opt = optimize.fit_data(acc_data, 
                                     daily_data, 

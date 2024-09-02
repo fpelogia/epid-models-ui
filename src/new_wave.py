@@ -143,4 +143,15 @@ def get_transition_points(data, visual=False, city_name = "", threshold = 3e-5, 
         plt.tight_layout()
         plt.savefig(f'Figuras/{city_name}_nw', facecolor='white', dpi=200)
         plt.show(block=False)
-    return x_t, fig
+
+        # return series data to plot ouside this function
+        tran_pts_fig_series_data = {
+            'normalized_acc_n_cases': normalized_acc_n_cases,
+            'unf_daily_n_cases':unf_daily_n_cases,
+            'daily_n_cases':daily_n_cases,
+            'sec_der':sec_der,
+            'abs_threshold':abs_threshold,
+            'x_t':x_t,
+            'y_t':y_t
+        }
+    return x_t, fig, tran_pts_fig_series_data
