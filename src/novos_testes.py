@@ -13,10 +13,14 @@ st.set_page_config(layout="wide")
 # Import data
 data = pd.read_csv("../Datasets/italy_regions.csv") 
 
-# Page title and sub header
-st.title('Multi-wave modelling and short-term prediction of ICU bed occupancy by patients with Covid-19 in regions of Italy')
-st.subheader('Math. Model. Nat. Phenom. 19 (2024) 13 - https://doi.org/10.1051/mmnp/2024012')
 
+col1, col2 = st.columns([3, 1])
+with col1:
+    # Page title and sub header
+    st.title('Multi-wave modelling and short-term prediction of ICU bed occupancy by patients with Covid-19 in regions of Italy')
+    st.subheader('Math. Model. Nat. Phenom. 19 (2024) 13 - https://doi.org/10.1051/mmnp/2024012')
+with col2:
+    st.image("../assets/unifesp.png", width=400)
 
 col1, col2 = st.columns(2)
 
@@ -93,16 +97,56 @@ with st.spinner('Please wait...'):
     else:
         tp_threshold = 1e-6
 
+    # Initial Conditions
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 3])
+    with col1:
+        tp_threshold = st.number_input(
+            "Threshold",
+            disabled=False,
+            value=tp_threshold,
+            format="%0.1e",
+            step=1e-6,
+            max_value=1.0,
+            min_value=1e-6
+        )
+    with col2:
+        scaling_factor = st.number_input(
+            "Scaling Factor",
+            disabled=False,
+            value=scaling_factor
+        )
+
+
     # Transition Points
     x_nw, fig, tran_pts_fig_series_data = get_transition_points(scaling_factor*acc_data, visual=True, threshold=tp_threshold, indicator = indicator, city_name=city_name)
 
     if use_transition_points == 'User defined':
+       
         # Allow user to adjust transition points
-        st.sidebar.title("Adjust Transition Points")
-        transition_points = [
-            st.sidebar.slider(f'Transition Point {i+1}', 0, len(tran_pts_fig_series_data['normalized_acc_n_cases']) - 1, value=x)
-            for i, x in enumerate(x_nw)
-        ]
+        # st.sidebar.title("Adjust Transition Points")
+        # user_transition_points = [
+        #     st.sidebar.slider(f'Transition Point {i+1}', 0, len(tran_pts_fig_series_data['normalized_acc_n_cases']) - 1, value=x)
+        #     for i, x in enumerate(x_nw)
+        # ]
+        # save_btn = st.sidebar.button('Run Model')
+        
+        # if save_btn:
+        #     transition_points = user_transition_points
+        # else:
+        #     transition_points = x_nw
+
+        # Form to adjust transition points
+        with st.sidebar.form(key='transition_points_form'):
+            st.title("Adjust Transition Points")
+            transition_points = [
+                st.slider(f'Transition Point {i+1}', 0, len(tran_pts_fig_series_data['normalized_acc_n_cases']) - 1, value=x)
+                for i, x in enumerate(tran_pts_fig_series_data['x_t'])
+            ]
+            # Submit button to apply changes
+            submit_button = st.form_submit_button(label='Apply Changes')
+
+
+
     else:
         transition_points = x_nw
 
@@ -149,7 +193,7 @@ with st.spinner('Please wait...'):
         pass # x_nw already contains the calculated points
     
     # Show transition points being used
-    text_input = st.text_input(
+    st.text_input(
         "Transition Points:",
         disabled=True,
         value=x_nw
@@ -314,6 +358,7 @@ with st.spinner('Please wait...'):
         df_sig_params = pd.DataFrame(sig_params_all_reg)
 
         st.dataframe(df_sig_params, use_container_width=True)
+
 
 footer="""
 <br><br>
