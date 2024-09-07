@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # Import data
-data = pd.read_csv("../Datasets/italy_regions.csv") 
+data = pd.read_csv("Datasets/italy_regions.csv") 
 
 
 col1, col2 = st.columns([3, 1])
@@ -24,7 +24,7 @@ with col1:
     st.title('Multi-wave modelling and short-term prediction of ICU bed occupancy by patients with Covid-19 in regions of Italy')
     st.subheader('Math. Model. Nat. Phenom. 19 (2024) 13 - https://doi.org/10.1051/mmnp/2024012')
 with col2:
-    st.image("../assets/unifesp.png", width=400)
+    st.image("assets/unifesp.png", width=400)
 
 col1, col2 = st.columns(2)
 

@@ -141,7 +141,7 @@ def get_transition_points(data, visual=False, city_name = "", threshold = 3e-5, 
         axs[2].scatter(x_t, y_t, s=15, c='r', zorder=2, label="sign change in the second derivative")
         plt.legend()
         plt.tight_layout()
-        plt.savefig(f'Figuras/{city_name}_nw', facecolor='white', dpi=200)
+        plt.savefig(f'src/Figuras/{city_name}_nw', facecolor='white', dpi=200)
         plt.show(block=False)
 
         # return series data to plot ouside this function
