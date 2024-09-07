@@ -304,7 +304,7 @@ def fit_data(acc_data_p, daily_data_p, city_name, x_nw, indicator='cases', n_wee
         plt.tight_layout(rect=[0, 0, 1, 0.98])
         #plt.savefig(f'output/Daily_{city_name}_2w_pred', facecolor='white', dpi=100)
         #plt.savefig(f'ESTADOSP/{city_name}', facecolor='white', dpi=200)
-        plt.savefig(f'Figuras/{city_name}_opt_{indicator}', facecolor='white', dpi=200)
+        plt.savefig(f'src/Figuras/{city_name}_opt_{indicator}', facecolor='white', dpi=200)
         plt.show(block=False)
 
     return sig_params, rel_rmse_list, rel_rmse_list_pred, y_m, fig
