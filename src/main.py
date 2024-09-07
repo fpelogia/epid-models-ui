@@ -8,7 +8,11 @@ import optimize
 from new_wave import get_transition_points
 
 # Use full page width
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    page_title="COVID-19 Modelling",
+    page_icon="🏥",
+)
 
 # Import data
 data = pd.read_csv("../Datasets/italy_regions.csv") 
@@ -98,7 +102,7 @@ with st.spinner('Please wait...'):
         tp_threshold = 1e-6
 
     # Initial Conditions
-    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 3])
+    col1, col2, col3, col4 = st.columns([1, 1, 2, 3])
     with col1:
         tp_threshold = st.number_input(
             "Threshold",
@@ -192,12 +196,14 @@ with st.spinner('Please wait...'):
     else: # Calculated
         pass # x_nw already contains the calculated points
     
-    # Show transition points being used
-    st.text_input(
-        "Transition Points:",
-        disabled=True,
-        value=x_nw
-    )
+
+    with col3:
+        # Show transition points being used
+        st.text_input(
+            "Transition Points:",
+            disabled=True,
+            value=x_nw
+        )
 
     col1, col2 = st.columns([1, 2])
 
